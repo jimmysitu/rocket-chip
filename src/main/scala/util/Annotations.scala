@@ -3,7 +3,8 @@
 package freechips.rocketchip.util
 
 import Chisel._
-import chisel3.experimental.{annotate, RawModule}
+import chisel3.experimental.{annotate, ChiselAnnotation, RawModule}
+import firrtl.annotations._
 
 // TODO: replace this with an implicit class when @chisel unprotects dontTouchPorts
 trait DontTouch { self: RawModule =>
@@ -35,5 +36,5 @@ case class RetimeModuleAnnotation(target: Named) extends SingleTargetAnnotation[
 
 /** Marks this module as a candidate for register retiming */
 trait ShouldBeRetimed { self: RawModule =>
-  annotate(new ChiselAnnotation { def toFirrtl = RetimeModuleAnnotation(this) })
+  annotate(new ChiselAnnotation { def toFirrtl = RetimeModuleAnnotation(self.toNamed) })
 }

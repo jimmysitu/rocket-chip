@@ -1,0 +1,88 @@
+#--------------------------------------------------------------------
+# Sources
+#--------------------------------------------------------------------
+
+# Verilog sources
+
+bb_vsrcs = \
+	$(base_dir)/cvcsrc/plusarg_reader.v \
+	$(base_dir)/cvcsrc/ClockDivider2.v \
+	$(base_dir)/cvcsrc/ClockDivider3.v \
+	$(base_dir)/cvcsrc/AsyncResetReg.v \
+
+sim_vsrcs = \
+	$(bb_vsrcs) \
+	$(generated_dir)/$(long_name).v \
+	$(generated_dir)/$(long_name).behav_srams.v \
+	$(base_dir)/cvcsrc/$(TB).v \
+	$(base_dir)/cvcsrc/SimDTM.v \
+    $(base_dir)/cvcsrc/SimJTAG.v \
+
+# C sources
+
+sim_csrcs = \
+	$(base_dir)/csrc/SimDTM.cc \
+    $(base_dir)/csrc/SimJTAG.cc \
+    $(base_dir)/csrc/remote_bitbang.cc
+
+#--------------------------------------------------------------------
+# Build Verilog
+#--------------------------------------------------------------------
+
+verilog: $(sim_vsrcs)
+
+.PHONY: verilog
+
+#--------------------------------------------------------------------
+# Build rules
+#--------------------------------------------------------------------
+
+CVC ?= cvc64
+
+CVC_OPTS = -sv -sv_lib $(simv).so \
+	+incdir+$(generated_dir) \
+    +define+CVC=1 \
+	+define+CLOCK_PERIOD=1.0 \
+	+define+PRINTF_COND=$(TB).printf_cond \
+	+define+STOP_COND=!$(TB).reset \
+	+define+RANDOMIZE_MEM_INIT \
+	+define+RANDOMIZE_REG_INIT \
+	+define+RANDOMIZE_GARBAGE_ASSIGN \
+	+define+RANDOMIZE_INVALID_ASSIGN \
+	+libext+.v
+
+CXX ?= g++
+
+CXX_OPTS = \
+    -I$(CVC_HOME)/pli_incs \
+	-I$(RISCV)/include \
+	-std=c++11 \
+	-Wl,-rpath,$(RISCV)/lib \
+    -fPIC -shared -export-dynamic
+
+#--------------------------------------------------------------------
+# Build the simulator
+#--------------------------------------------------------------------
+
+simv = $(sim_dir)/simv-$(PROJECT)-$(CONFIG)
+$(simv) : $(sim_vsrcs) $(sim_csrcs)
+	cd $(sim_dir) && \
+	rm -rf csrc && \
+    $(CXX) $(CXX_OPTS) $(sim_csrcs) -o $(simv).so && \
+	$(CVC) $(CVC_OPTS) -o $(simv) $(sim_vsrcs)
+
+simv_debug = $(sim_dir)/simv-$(PROJECT)-$(CONFIG)-debug
+$(simv_debug) : $(sim_vsrcs) $(sim_csrcs)
+	cd $(sim_dir) && \
+	rm -rf csrc && \
+    $(CXX) $(CXX_OPTS) $(sim_csrcs) -o $(simv).so && \
+	$(CVC) $(CVC_OPTS) -o $(simv_debug) $(sim_vsrcs) \
+	+define+DEBUG
+
+#--------------------------------------------------------------------
+# Run
+#--------------------------------------------------------------------
+
+seed = $(shell date +%s)
+exec_simv = $(simv) +permissive -q +ntb_random_seed_automatic +permissive-off
+exec_simv_debug = $(simv_debug) +permissive -q +ntb_random_seed_automatic +permissive-off

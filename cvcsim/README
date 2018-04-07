@@ -1,4 +1,4 @@
 Jimmy, I try to run rocket-chip with cvc, but it seems there is compile error with cvc(700c, download from http://www.tachyon-da.com, 04/06/2018).
 
-This compile error seem cause by the generated design code by firrtl, and cannot be easily fixed.
-I suggest we try iverilog with VPI instead, see isim dir
+This compile error seems cause by the generated design code by firrtl, and cannot be fixed easily.
+I suggest we try iverilog with VPI instead, see ivlsim branch

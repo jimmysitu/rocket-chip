@@ -6,11 +6,16 @@
 
 module TestDriver;
 
-  reg clock = 1'b0;
-  reg reset = 1'b1;
+  reg clock; // = 1'b0;
+  reg reset; // = 1'b1;
 
+  initial clock = 1'b0;
   always #(`CLOCK_PERIOD/2.0) clock = ~clock;
-  initial #(`RESET_DELAY) reset = 0;
+  
+  initial begin
+    reset = 1'b1; 
+    #(`RESET_DELAY) reset = 0;
+  end
 
   // Read input arguments and initialize
   reg verbose = 1'b0;

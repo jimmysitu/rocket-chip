@@ -5,10 +5,10 @@
 # Verilog sources
 
 bb_vsrcs = \
-	$(base_dir)/cvcsrc/plusarg_reader.v \
-	$(base_dir)/cvcsrc/ClockDivider2.v \
-	$(base_dir)/cvcsrc/ClockDivider3.v \
-	$(base_dir)/cvcsrc/AsyncResetReg.v \
+	$(base_dir)/vsrc/plusarg_reader.v \
+	$(base_dir)/vsrc/ClockDivider2.v \
+	$(base_dir)/vsrc/ClockDivider3.v \
+	$(base_dir)/vsrc/AsyncResetReg.v \
 
 sim_vsrcs = \
 	$(bb_vsrcs) \
@@ -17,6 +17,7 @@ sim_vsrcs = \
 	$(base_dir)/cvcsrc/$(TB).v \
 	$(base_dir)/cvcsrc/SimDTM.v \
     $(base_dir)/cvcsrc/SimJTAG.v \
+    $(base_dir)/cvcsrc/timescale.v \
 
 # C sources
 
@@ -44,12 +45,13 @@ CVC_OPTS = -sv -sv_lib $(simv).so \
     +define+CVC=1 \
 	+define+CLOCK_PERIOD=1.0 \
 	+define+PRINTF_COND=$(TB).printf_cond \
-	+define+STOP_COND=!$(TB).reset \
+	+define+STOP_COND=\!$(TB).reset \
 	+define+RANDOMIZE_MEM_INIT \
 	+define+RANDOMIZE_REG_INIT \
 	+define+RANDOMIZE_GARBAGE_ASSIGN \
 	+define+RANDOMIZE_INVALID_ASSIGN \
-	+libext+.v
+    +verbose \
+    +libext+.v
 
 CXX ?= g++
 
@@ -58,6 +60,9 @@ CXX_OPTS = \
 	-I$(RISCV)/include \
 	-std=c++11 \
 	-Wl,-rpath,$(RISCV)/lib \
+	-Wl,--no-as-needed \
+	-L$(RISCV)/lib \
+	-lfesvr -lpthread \
     -fPIC -shared -export-dynamic
 
 #--------------------------------------------------------------------
@@ -84,5 +89,5 @@ $(simv_debug) : $(sim_vsrcs) $(sim_csrcs)
 #--------------------------------------------------------------------
 
 seed = $(shell date +%s)
-exec_simv = $(simv) +permissive -q +ntb_random_seed_automatic +permissive-off
-exec_simv_debug = $(simv_debug) +permissive -q +ntb_random_seed_automatic +permissive-off
+exec_simv = $(simv)
+exec_simv_debug = $(simv_debug)

@@ -49,19 +49,23 @@ import "DPI-C" function int debug_tick
   int __exit;
 
   assign #0.1 debug_req_valid = __debug_req_valid;
-  assign #0.1 debug_req_bits_addr = __debug_req_bits_addr[6:0];
-  assign #0.1 debug_req_bits_op = __debug_req_bits_op[1:0];
-  assign #0.1 debug_req_bits_data = __debug_req_bits_data[31:0];
+  assign #0.1 debug_req_bits_addr = __debug_req_bits_addr;
+  assign #0.1 debug_req_bits_op = __debug_req_bits_op;
+  assign #0.1 debug_req_bits_data = __debug_req_bits_data;
   assign #0.1 debug_resp_ready = __debug_resp_ready;
   assign #0.1 exit = __exit;
 
   always @(posedge clk)
   begin
     r_reset <= reset;
+  end
+
+  always @(posedge clk)
+  begin
     if (reset || r_reset)
     begin
-      __debug_req_valid = 0;
-      __debug_resp_ready = 0;
+      //__debug_req_valid = 0;
+      //__debug_resp_ready = 0;
       __exit = 0;
     end
     else

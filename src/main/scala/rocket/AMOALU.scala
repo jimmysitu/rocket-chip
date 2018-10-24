@@ -38,7 +38,7 @@ class LoadGen(typ: UInt, signed: Bool, addr: UInt, dat: UInt, zero: Bool, maxSiz
     for (i <- log2Up(maxSize)-1 to logMinSize by -1) {
       val pos = 8 << i
       val shifted = Mux(addr(i), res(2*pos-1,pos), res(pos-1,0))
-      val doZero = Bool(i == 0) && zero
+      val doZero = (i == 0).B && zero
       val zeroed = Mux(doZero, 0.U, shifted)
       res = Cat(Mux(size === i.U || doZero, Fill(8*maxSize-pos, signed && zeroed(pos-1)), res(8*maxSize-1,pos)), zeroed)
     }

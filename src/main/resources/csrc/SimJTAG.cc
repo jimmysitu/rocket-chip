@@ -30,13 +30,13 @@ extern "C" int jtag_tick
   unsigned char jtag_TDI;   //2
   unsigned char jtag_TRSTn; //3
   unsigned char jtag_TDO;   //4
-  
+
   vpiHandle sys = vpi_handle(vpiSysTfCall, 0);
   vpiHandle argv = vpi_iterate(vpiArgument, sys);
   vpiHandle arg[5];
   s_vpi_value val[5];
   s_vpi_value rtn;
-  
+
   // link all signals
   for(int i = 0; i < 5; i++) {
     arg[i] = vpi_scan(argv);
@@ -46,10 +46,6 @@ extern "C" int jtag_tick
 #endif
 
   if (!jtag) {
-    s_vpi_vlog_info info;
-    if (!vpi_get_vlog_info(&info)) {
-      abort();
-    }
     // TODO: Pass in real port number
     jtag = new remote_bitbang_t(0);
   }
@@ -70,10 +66,10 @@ extern "C" int jtag_tick
   val[2].value.integer = jtag_TDI;
   val[3].value.integer = jtag_TRSTn;
 
-  vpi_put_value(arg[0], &(val[0]), 0, vpiNoDelay); 
-  vpi_put_value(arg[1], &(val[1]), 0, vpiNoDelay); 
-  vpi_put_value(arg[2], &(val[2]), 0, vpiNoDelay); 
-  vpi_put_value(arg[3], &(val[3]), 0, vpiNoDelay); 
+  vpi_put_value(arg[0], &(val[0]), 0, vpiNoDelay);
+  vpi_put_value(arg[1], &(val[1]), 0, vpiNoDelay);
+  vpi_put_value(arg[2], &(val[2]), 0, vpiNoDelay);
+  vpi_put_value(arg[3], &(val[3]), 0, vpiNoDelay);
 
   // return value
   rtn.format = vpiIntVal;

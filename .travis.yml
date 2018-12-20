@@ -57,6 +57,7 @@ branches:
 branches:
   only:
   - master
+  - ivlsim
 
 jobs:
   include:

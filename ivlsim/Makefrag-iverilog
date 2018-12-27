@@ -64,6 +64,7 @@ bb_vsrcs = \
 	$(vsrc)/ClockDivider2.v \
 	$(vsrc)/ClockDivider3.v \
 	$(vsrc)/AsyncResetReg.v \
+    $(vsrc)/EICG_wrapper.v \
 
 sim_vsrcs = \
 	$(generated_dir)/$(long_name).v \
@@ -122,6 +123,7 @@ IVL_OPTS = \
 	-DRANDOMIZE_REG_INIT \
 	-DRANDOMIZE_GARBAGE_ASSIGN \
 	-DRANDOMIZE_INVALID_ASSIGN \
+	-DRANDOMIZE_DELAY=2 \
 
 
 #--------------------------------------------------------------------

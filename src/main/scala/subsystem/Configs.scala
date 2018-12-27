@@ -19,13 +19,24 @@ class BaseSubsystemConfig extends Config ((site, here, up) => {
   case XLen => 64 // Applies to all cores
   case MaxHartIdBits => log2Up(site(RocketTilesKey).size)
   // Interconnect parameters
-  case SystemBusKey => SystemBusParams(beatBytes = site(XLen)/8, blockBytes = site(CacheBlockBytes))
-  case PeripheryBusKey => PeripheryBusParams(
+  case SystemBusKey => SystemBusParams(
+    beatBytes = site(XLen)/8,
+    blockBytes = site(CacheBlockBytes))
+  case ControlBusKey => PeripheryBusParams(
     beatBytes = site(XLen)/8,
     blockBytes = site(CacheBlockBytes),
-    errorDevice = Some(DevNullParams(List(AddressSet(0x3000, 0xfff)), maxAtomic=site(XLen)/8, maxTransfer=4096)))
-  case MemoryBusKey => MemoryBusParams(beatBytes = site(XLen)/8, blockBytes = site(CacheBlockBytes))
-  case FrontBusKey => FrontBusParams(beatBytes = site(XLen)/8, blockBytes = site(CacheBlockBytes))
+    errorDevice = Some(DevNullParams(List(AddressSet(0x3000, 0xfff)), maxAtomic=site(XLen)/8, maxTransfer=4096)),
+    replicatorMask = site(MultiChipMaskKey))
+  case PeripheryBusKey => PeripheryBusParams(
+    beatBytes = site(XLen)/8,
+    blockBytes = site(CacheBlockBytes))
+  case MemoryBusKey => MemoryBusParams(
+    beatBytes = site(XLen)/8,
+    blockBytes = site(CacheBlockBytes),
+    replicatorMask = site(MultiChipMaskKey))
+  case FrontBusKey => FrontBusParams(
+    beatBytes = site(XLen)/8,
+    blockBytes = site(CacheBlockBytes))
   // Additional device Parameters
   case BootROMParams => BootROMParams(contentFileName = "./bootrom/bootrom.img")
   case DebugModuleParams => DefaultDebugModuleParams(site(XLen))
@@ -161,7 +172,7 @@ class WithIncoherentTiles extends Config((site, here, up) => {
   }
   case BankedL2Key => up(BankedL2Key, site).copy(coherenceManager = { subsystem =>
     val ww = LazyModule(new TLWidthWidget(subsystem.sbus.beatBytes)(subsystem.p))
-    (ww.node, ww.node, () => None)
+    (ww.node, ww.node, None)
   })
 })
 
@@ -262,11 +273,12 @@ class WithEdgeDataBits(dataBits: Int) extends Config((site, here, up) => {
 })
 
 class WithJtagDTM extends Config ((site, here, up) => {
-  case IncludeJtagDTM => true
+  case ExportDebugDMI => false
+  case ExportDebugJTAG => true
 })
 
 class WithDebugSBA extends Config ((site, here, up) => {
-  case DebugModuleParams => up(DebugModuleParams).copy(hasBusMaster = true)
+  case DebugModuleParams => up(DebugModuleParams, site).copy(hasBusMaster = true)
 })
 
 class WithNBitPeripheryBus(nBits: Int) extends Config ((site, here, up) => {

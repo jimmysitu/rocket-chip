@@ -45,6 +45,7 @@ class FrontendPerfEvents extends Bundle {
 
 class FrontendIO(implicit p: Parameters) extends CoreBundle()(p) {
   val might_request = Bool(OUTPUT)
+  val clock_enabled = Bool(INPUT)
   val req = Valid(new FrontendReq)
   val sfence = Valid(new SFenceReq)
   val resp = Decoupled(new FrontendResp).flip
@@ -83,6 +84,7 @@ class FrontendModule(outer: Frontend) extends LazyModuleImp(outer)
 
   val clock_en_reg = Reg(Bool())
   val clock_en = clock_en_reg || io.cpu.might_request
+  io.cpu.clock_enabled := clock_en
   assert(!(io.cpu.req.valid || io.cpu.sfence.valid || io.cpu.flush_icache || io.cpu.bht_update.valid || io.cpu.btb_update.valid) || io.cpu.might_request)
   val gated_clock =
     if (!rocketParams.clockGate) clock
@@ -321,7 +323,8 @@ class FrontendModule(outer: Frontend) extends LazyModuleImp(outer)
   io.errors := icache.io.errors
 
   // gate the clock
-  clock_en_reg := io.cpu.might_request || // chicken bit
+  clock_en_reg := !rocketParams.clockGate ||
+    io.cpu.might_request || // chicken bit
     icache.io.keep_clock_enabled || // I$ miss or ITIM access
     s1_valid || s2_valid || // some fetch in flight
     !tlb.io.req.ready || // handling TLB miss

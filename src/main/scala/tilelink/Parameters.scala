@@ -31,7 +31,8 @@ case class TLManagerParameters(
   alwaysGrantsT:      Boolean = false, // typically only true for CacheCork'd read-write devices
   // If fifoId=Some, all accesses sent to the same fifoId are executed and ACK'd in FIFO order
   // Note: you can only rely on this FIFO behaviour if your TLClientParameters include requestFifo
-  fifoId:             Option[Int] = None)
+  fifoId:             Option[Int] = None,
+  device: Option[Device] = None)
 {
   require (!address.isEmpty, "Address cannot be empty")
   address.foreach { a => require (a.finite, "Address must be finite") }
@@ -161,9 +162,11 @@ case class TLManagerPortParameters(
       lgSize:  UInt,
       range:   Option[TransferSizes]): Bool = {
     def trim(x: TransferSizes) = range.map(_.intersect(x)).getOrElse(x)
+    // groupBy returns an unordered map, convert back to Seq and sort the result for determinism
     val supportCases = managers.groupBy(m => trim(member(m))).mapValues(_.flatMap(_.address))
-    val mask = if (safe) ~BigInt(0) else AddressDecoder(supportCases.values.toList)
-    val simplified = supportCases.mapValues(seq => AddressSet.unify(seq.map(_.widen(~mask)).distinct))
+                               .toSeq.sortBy { case (k, _) => (k.min, k.max) }
+    val mask = if (safe) ~BigInt(0) else AddressDecoder(supportCases.map(_._2))
+    val simplified = supportCases.map { case (k, seq) => (k, AddressSet.unify(seq.map(_.widen(~mask)).distinct)) }
     simplified.map { case (s, a) =>
       (Bool(Some(s) == range) || s.containsLg(lgSize)) &&
       a.map(_.contains(address)).reduce(_||_)
@@ -377,7 +380,7 @@ case class TLRationalEdgeParameters(client: TLRationalClientPortParameters, mana
 
 object ManagerUnification
 {
-  def apply(managers: Seq[TLManagerParameters]) = {
+  def apply(managers: Seq[TLManagerParameters]): List[TLManagerParameters] = {
     // To be unified, devices must agree on all of these terms
     case class TLManagerKey(
       resources:          Seq[Resource],
